@@ -1,0 +1,7 @@
+/* mcp tools list styles */
+
+.mcp-tools-list__count {
+  font-size: var(--pf-v5-global--FontSize--sm);
+  color: var(--pf-v5-global--Color--200);
+  padding: var(--pf-v5-global--spacer--sm);
+}

@@ -1,23 +1,32 @@
-# OpenShift console plugin template
+# MCP Gateway Console Plugin
 
-This project is a minimal template for writing a new OpenShift Console dynamic
-plugin.
+OpenShift Console dynamic plugin for [MCP Gateway](https://github.com/kuadrant/mcp-gateway) - provides a UI for viewing and managing Model Context Protocol (MCP) servers and tools.
 
-[Openshift console plugins](https://github.com/openshift/console/tree/main/frontend/packages/console-dynamic-plugin-sdk)
-allow you to extend the [OpenShift web console](https://github.com/openshift/console)
-at runtime, adding custom pages and other extensions. They are based on
-[webpack module federation](https://webpack.js.org/concepts/module-federation/).
-Plugins are registered with console using the `ConsolePlugin` custom resource
-and enabled in the console operator config by a cluster administrator.
+## Features
 
-The `main` branch of this repository contains an example plugin which works
-with the latest version. To see an example of a plugin which works with an older
-version, visit the appropriate `release-4.x` branch.
+- **Server Overview Dashboard** - View registered MCP servers, connection status, and tool counts
+- **Tools Browser** - Search and explore available tools from all MCP servers
+- **Authorization Aware** - Respects user permissions via AuthPolicy (Phase 2)
+- **Real-time Updates** - Auto-refresh server status and tool availability
 
-[Node.js](https://nodejs.org/en/) and [yarn](https://yarnpkg.com) are required
-to build and run the example. To run OpenShift console in a container, either
-[Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io) and
-[oc](https://console.redhat.com/openshift/downloads) are required.
+## Architecture
+
+```
+User → OpenShift Console → MCP Gateway Plugin → MCP Gateway Broker → MCP Servers
+```
+
+The plugin communicates with the mcp-gateway broker via:
+- `GET /status` - Server registration and status
+- `POST /mcp` - MCP protocol (tools/list, tools/call)
+
+See [docs/architecture.md](docs/architecture.md) for detailed architecture and [docs/learning-guide.md](docs/learning-guide.md) for frontend development tutorials.
+
+## Prerequisites
+
+- OpenShift 4.12+ cluster
+- MCP Gateway deployed and running
+- [Node.js](https://nodejs.org/en/) 18+ and [yarn](https://yarnpkg.com) 4+
+- [Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io) and [oc](https://console.redhat.com/openshift/downloads)
 
 ## Getting started
 

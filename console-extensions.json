@@ -3,18 +3,44 @@
     "type": "console.page/route",
     "properties": {
       "exact": true,
-      "path": "/example",
-      "component": { "$codeRef": "ExamplePage" }
+      "path": "/mcp-gateway",
+      "component": { "$codeRef": "MCPOverview" }
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/mcp-gateway/tools",
+      "component": { "$codeRef": "MCPToolsList" }
+    }
+  },
+  {
+    "type": "console.navigation/section",
+    "properties": {
+      "id": "mcp-gateway",
+      "name": "%plugin__console-plugin-template~MCP Gateway%",
+      "perspective": "admin"
     }
   },
   {
     "type": "console.navigation/href",
     "properties": {
-      "id": "example",
-      "name": "%plugin__console-plugin-template~Plugin example%",
-      "href": "/example",
+      "id": "mcp-overview",
+      "name": "%plugin__console-plugin-template~Overview%",
+      "href": "/mcp-gateway",
       "perspective": "admin",
-      "section": "home"
+      "section": "mcp-gateway"
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "mcp-tools",
+      "name": "%plugin__console-plugin-template~Tools%",
+      "href": "/mcp-gateway/tools",
+      "perspective": "admin",
+      "section": "mcp-gateway"
     }
   }
 ]

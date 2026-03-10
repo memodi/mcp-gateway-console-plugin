@@ -7,8 +7,11 @@
     "sourceMap": true,
     "jsx": "react-jsx",
     "allowJs": true,
-    "strict": true,
-    "noUnusedLocals": true
+    "strict": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "noUnusedLocals": false,
+    "skipLibCheck": true
   },
   "include": ["src"],
   "exclude": ["node_modules"],

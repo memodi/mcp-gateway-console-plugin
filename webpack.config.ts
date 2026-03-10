@@ -83,6 +83,7 @@ const config: Configuration = {
   optimization: {
     chunkIds: isProd ? 'deterministic' : 'named',
     minimize: isProd,
+    splitChunks: false,
   },
 };
 

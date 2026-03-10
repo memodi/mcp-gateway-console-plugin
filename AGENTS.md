@@ -1,15 +1,18 @@
-# AI Agent Instructions for OpenShift Console Plugin Template
+# AI Agent Instructions for MCP gateway console plugin
 
 This document provides context and guidelines for AI coding assistants working on this codebase.
 
 ## Project Overview
+This is a repository for MCP gateway console plugin for OpenShift. OpenShift console plugins are dynamic plugins that can be optionally enabled to have their UI layered with OpenShift console.
 
-This is a **template repository** for creating OpenShift Console dynamic plugins. It's meant to be used via GitHub's "Use this template" feature, NOT forked. The template provides a minimal starting point for extending the OpenShift Console UI with custom pages and functionality.
+**Purpose:** Provides a UI for users to:
+1. View registered MCP servers and their status
+2. Browse available tools from all MCP servers
+3. See which tools they're authorized to use (based on AuthPolicy)
 
-> **⚠️ WARNING:**
-> This repository is used by multiple large-scale enterprise web applications. Please proceed with caution when making any changes to this codebase. Changes here can affect downstream projects that depend on this template.
->
-> **Only make changes that should be standard practice for ALL plugins created from this template.** If a change is specific to one plugin use case, it belongs in the instantiated plugin repository, not in this template.
+**MCP Gateway Backend:** This plugin communicates with the mcp-gateway broker API endpoints:
+- `/status` - Get server registration status
+- `/mcp` - MCP protocol endpoint for tool discovery and invocation 
 
 **Key Technologies:**
 - TypeScript + React 17
@@ -39,6 +42,23 @@ This plugin uses webpack module federation to load at runtime into the OpenShift
 - All components should be TypeScript (`.tsx`)
 - Follow PatternFly component patterns
 - Use PatternFly CSS variables instead of hex colors (dark mode compatibility)
+
+### MCP Gateway Specific Components
+
+**MCPOverview** - Dashboard showing:
+- Summary cards (total servers, connected, tools available)
+- Server status table with expandable rows
+- Empty state when no servers registered
+
+**MCPToolsList** - Tools browsing with:
+- Search/filter toolbar
+- Expandable table showing tool details and input schema
+- Empty state when no tools available
+
+**Custom Hooks:**
+- `useMCPServers()` - Fetches server list from broker `/status` endpoint
+- `useMCPTools(token?)` - Fetches tools via MCP protocol, optionally filtered by user auth
+- `useUserAuth()` - Manages user authentication context (placeholder for Phase 2)
 
 ### Styling Constraints
 
@@ -72,16 +92,27 @@ return <h1>{t('Hello, World!')}</h1>;
 
 ```
 src/
-  components/          # React components
-    ExamplePage.tsx   # Example page component
-    *.css            # Component styles (scoped with plugin prefix)
-console-extensions.json # Plugin extension declarations
-package.json           # Plugin metadata in consolePlugin section
-tsconfig.json          # TypeScript config (strict: false currently)
-webpack.config.ts      # Module federation + build config
-locales/               # i18n translation files
-charts/                # Helm chart for deployment
-integration-tests/     # Cypress e2e tests
+  api/                   # API client for mcp-gateway broker
+    client.ts           # HTTP client for broker API
+    types.ts            # TypeScript types for API responses
+  components/            # React components
+    MCPOverview/        # Dashboard with server status cards
+    MCPToolsList/       # Tools browsing and search
+  hooks/                 # Custom React hooks
+    useMCPServers.ts    # Fetch and manage server list
+    useMCPTools.ts      # Fetch and manage tools list
+    useUserAuth.ts      # User authentication context
+console-extensions.json  # Plugin extension declarations
+package.json            # Plugin metadata in consolePlugin section
+tsconfig.json           # TypeScript config (strict: false currently)
+webpack.config.ts       # Module federation + build config
+locales/                # i18n translation files
+charts/                 # Helm chart for deployment
+integration-tests/      # Cypress e2e tests
+docs/                   # Documentation
+  architecture.md       # UI architecture and design
+  learning-guide.md     # Frontend learning resources
+  authorization.md      # Authorization implementation
 ```
 
 ## Development Workflow
@@ -155,7 +186,7 @@ When instantiating from template, update:
 
 ### Building Image
 ```bash
-docker build -t quay.io/my-repository/my-plugin:latest .
+docker build -t quay.io/memrhn_support_memodiodi/mcp-gateway-console-plugin:latest .
 # For Apple Silicon: add --platform=linux/amd64
 ```
 
@@ -166,8 +197,6 @@ helm upgrade -i my-plugin charts/openshift-console-plugin \
   --create-namespace \
   --set plugin.image=my-plugin-image-location
 ```
-
-**Note:** OpenShift 4.10 requires `--set plugin.securityContext.enabled=false`
 
 ## Important Constraints & Gotchas
 
@@ -219,7 +248,6 @@ See [Console Plugin SDK README](https://github.com/openshift/console/tree/master
 
 **When should I...**
 
-- **Use this template?** When creating a NEW OpenShift Console plugin from scratch
 - **Add a page?** Update console-extensions.json + exposedModules + create component
 - **Style something?** Use PatternFly components and CSS variables, prefix custom classes
 - **Add translations?** Use `t()` function, run `yarn i18n` after
