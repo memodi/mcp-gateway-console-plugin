@@ -35,7 +35,7 @@ import {
 import { useMCPTools } from '../hooks';
 import { EnrichedTool } from '../api/types';
 import { setAPIConfig } from '../api/client';
-import './MCPToolsList.bak/mcp-tools-list.css';
+
 
 // configure api to use mock broker for development
 if (window.location.hostname === 'localhost') {

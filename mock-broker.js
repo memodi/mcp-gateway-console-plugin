@@ -6,52 +6,58 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// mock broker status endpoint
+// mock broker status endpoint - matches actual broker API structure
 app.get('/api/mcp/status', (req, res) => {
+  const now = new Date().toISOString();
   res.json({
-    servers: {
-      'weather-server': {
-        name: 'weather-server',
-        url: 'http://weather.mcp.local/mcp',
-        toolPrefix: 'weather_',
-        toolCount: 3,
-        status: 'connected',
-        credentials: true,
+    servers: [
+      {
+        id: 'weather-server:weather_:',
+        name: 'mcp-test/weather-server',
+        lastValidated: now,
+        message: 'Successfully connected to MCP server',
+        ready: true,
+        totalTools: 3,
       },
-      'github-mcp': {
-        name: 'github-mcp',
-        url: 'https://api.githubcopilot.com/mcp',
-        toolPrefix: 'github_',
-        toolCount: 94,
-        status: 'connected',
-        credentials: true,
+      {
+        id: 'github-mcp:github_:',
+        name: 'mcp-prod/github-mcp',
+        lastValidated: now,
+        message: 'Successfully connected to MCP server',
+        ready: true,
+        totalTools: 6,
       },
-      'calculator': {
-        name: 'calculator',
-        url: 'http://calc.mcp.local/mcp',
-        toolPrefix: 'calc_',
-        toolCount: 5,
-        status: 'connected',
-        credentials: false,
+      {
+        id: 'calculator:calc_:',
+        name: 'mcp-test/calculator',
+        lastValidated: now,
+        message: 'Successfully connected to MCP server',
+        ready: true,
+        totalTools: 5,
       },
-      'broken-server': {
-        name: 'broken-server',
-        url: 'http://broken.mcp.local/mcp',
-        toolPrefix: 'broken_',
-        toolCount: 0,
-        status: 'error',
-        lastError: 'Connection refused',
-        credentials: false,
+      {
+        id: 'broken-server:broken_:',
+        name: 'mcp-test/broken-server',
+        lastValidated: now,
+        message: 'Connection refused: dial tcp 10.0.1.50:8080: connect: connection refused',
+        ready: false,
+        totalTools: 0,
       },
-      'disconnected-server': {
-        name: 'disconnected-server',
-        url: 'http://disco.mcp.local/mcp',
-        toolPrefix: 'disco_',
-        toolCount: 0,
-        status: 'disconnected',
-        credentials: false,
+      {
+        id: 'disconnected-server:disco_:',
+        name: 'mcp-test/disconnected-server',
+        lastValidated: now,
+        message: 'Server disconnected',
+        ready: false,
+        totalTools: 0,
       },
-    },
+    ],
+    overallValid: false,
+    totalServers: 5,
+    healthyServers: 3,
+    unHealthyServers: 2,
+    toolConflicts: 0,
+    timestamp: now,
   });
 });
 

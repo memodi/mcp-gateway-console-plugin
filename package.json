@@ -91,7 +91,7 @@
       "MCPToolsList": "./components/MCPToolsList"
     },
     "dependencies": {
-      "@console/pluginAPI": "^4.20.0"
+      "@console/pluginAPI": "*"
     }
   },
   "packageManager": "yarn@4.13.0"

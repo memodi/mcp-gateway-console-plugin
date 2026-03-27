@@ -1,19 +1,23 @@
 // API type definitions for MCP Gateway
 
-// broker /status endpoint response
+// broker /status endpoint response matches upstream.ServerValidationStatus
 export interface BrokerStatusResponse {
-  servers: {
-    [serverName: string]: ServerInfo;
-  };
+  servers: ServerValidationStatus[];
+  overallValid: boolean;
+  totalServers: number;
+  healthyServers: number;
+  unHealthyServers: number;
+  toolConflicts: number;
+  timestamp: string;
 }
 
-export interface ServerInfo {
-  url: string;
-  status: 'connected' | 'disconnected' | 'error' | 'registering';
-  toolPrefix: string;
-  toolCount: number;
-  lastError?: string;
-  credentials?: boolean;
+export interface ServerValidationStatus {
+  id: string;
+  name: string;
+  lastValidated: string;
+  message: string;
+  ready: boolean;
+  totalTools: number;
 }
 
 // mcp protocol types
@@ -76,8 +80,7 @@ export interface ContentItem {
 }
 
 // enriched types for ui display
-export interface EnrichedServer extends ServerInfo {
-  name: string;
+export interface EnrichedServer extends ServerValidationStatus {
   tools?: Tool[];
 }
 

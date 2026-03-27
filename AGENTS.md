@@ -244,6 +244,40 @@ See [Console Plugin SDK README](https://github.com/openshift/console/tree/master
 - [PatternFly React](https://www.patternfly.org/get-started/develop)
 - [Dynamic Plugin Enhancement Proposal](https://github.com/openshift/enhancements/blob/master/enhancements/console/dynamic-plugins.md)
 
+## Automatic Deployment via MCPGatewayExtension (Recent Work)
+
+### Architecture
+When MCPGatewayExtension CRD is created in mcp-gateway, the controller auto-deploys this console plugin:
+- Deployment (2 replicas) with nginx serving the React SPA
+- Service with TLS via service-serving-cert annotation
+- ConfigMap with nginx config including broker API proxy
+- ConsolePlugin CR (cluster-scoped, no owner reference)
+
+### Critical: Nginx Proxy for Broker API
+**Problem**: Browser can't reach broker API due to CORS restrictions and path mismatch.
+
+**Solution**: Nginx reverse proxy in console plugin pod routes browser requests to broker service:
+```nginx
+location /status {
+  proxy_pass http://mcp-gateway.<namespace>.svc.cluster.local:8080/status;
+}
+location /mcp {
+  proxy_pass http://mcp-gateway.<namespace>.svc.cluster.local:8080/mcp;
+  # WebSocket/SSE support for MCP protocol
+  proxy_http_version 1.1;
+  proxy_set_header Upgrade $http_upgrade;
+  proxy_set_header Connection "upgrade";
+  proxy_buffering off;
+}
+```
+
+Frontend uses `brokerBaseUrl: ''` in `src/api/client.ts` to make relative requests that nginx proxies.
+
+### Key Files
+- `src/api/client.ts` - Uses empty `brokerBaseUrl` for nginx proxy
+- `Dockerfile` - nginx serves from `/usr/share/nginx/html`
+- Controller generates nginx config with broker proxy at deployment time
+
 ## Quick Decision Guide
 
 **When should I...**

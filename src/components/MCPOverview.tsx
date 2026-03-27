@@ -37,7 +37,7 @@ import {
 import { useMCPServers, useMCPTools } from '../hooks';
 import { EnrichedServer } from '../api/types';
 import { setAPIConfig } from '../api/client';
-import './MCPOverview.bak/mcp-overview.css';
+
 
 // configure api to use mock broker for development
 if (window.location.hostname === 'localhost') {
@@ -48,18 +48,11 @@ if (window.location.hostname === 'localhost') {
 const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers }) => {
   const { t } = useTranslation('plugin__console-plugin-template');
 
-  const getStatusDisplay = (status: string, lastError?: string) => {
-    switch (status) {
-      case 'connected':
-        return { icon: <CheckCircleIcon />, variant: 'green' as const, label: t('Connected') };
-      case 'disconnected':
-        return { icon: <ExclamationTriangleIcon />, variant: 'orange' as const, label: t('Disconnected') };
-      case 'error':
-        return { icon: <ExclamationCircleIcon />, variant: 'red' as const, label: lastError || t('Error') };
-      case 'registering':
-        return { icon: <InProgressIcon />, variant: 'blue' as const, label: t('Registering') };
-      default:
-        return { icon: null, variant: 'grey' as const, label: status };
+  const getStatusDisplay = (ready: boolean, message: string) => {
+    if (ready) {
+      return { icon: <CheckCircleIcon />, variant: 'green' as const, label: t('Ready') };
+    } else {
+      return { icon: <ExclamationCircleIcon />, variant: 'red' as const, label: message };
     }
   };
 
@@ -69,23 +62,23 @@ const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers })
         <Tr>
           <Th>{t('Server Name')}</Th>
           <Th>{t('Status')}</Th>
-          <Th>{t('Tool Prefix')}</Th>
           <Th>{t('Tool Count')}</Th>
-          <Th>{t('URL')}</Th>
-          <Th>{t('Authentication')}</Th>
+          <Th>{t('Last Validated')}</Th>
+          <Th>{t('ID')}</Th>
         </Tr>
       </Thead>
       <Tbody>
         {servers.map((server) => {
-          const statusDisplay = getStatusDisplay(server.status, server.lastError);
+          const statusDisplay = getStatusDisplay(server.ready, server.message);
+          const lastValidated = new Date(server.lastValidated).toLocaleString();
           return (
-            <Tr key={server.name}>
+            <Tr key={server.id}>
               <Td dataLabel={t('Server Name')}>
                 <strong>{server.name}</strong>
               </Td>
               <Td dataLabel={t('Status')}>
-                {server.lastError ? (
-                  <Tooltip content={server.lastError}>
+                {!server.ready ? (
+                  <Tooltip content={server.message}>
                     <Label icon={statusDisplay.icon} color={statusDisplay.variant}>
                       {statusDisplay.label}
                     </Label>
@@ -96,21 +89,14 @@ const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers })
                   </Label>
                 )}
               </Td>
-              <Td dataLabel={t('Tool Prefix')}>
-                <code>{server.toolPrefix}</code>
-              </Td>
               <Td dataLabel={t('Tool Count')}>
-                {server.toolCount}
+                {server.totalTools}
               </Td>
-              <Td dataLabel={t('URL')}>
-                <code className="mcp-overview__url">{server.url}</code>
+              <Td dataLabel={t('Last Validated')}>
+                {lastValidated}
               </Td>
-              <Td dataLabel={t('Authentication')}>
-                {server.credentials ? (
-                  <Label color="blue">{t('Enabled')}</Label>
-                ) : (
-                  <Label color="grey">{t('None')}</Label>
-                )}
+              <Td dataLabel={t('ID')}>
+                <code className="mcp-overview__url">{server.id}</code>
               </Td>
             </Tr>
           );
@@ -126,9 +112,8 @@ const MCPOverview: React.FC = () => {
   const { servers, loading: serversLoading, error: serversError, refresh } = useMCPServers();
   const { tools, loading: toolsLoading } = useMCPTools();
 
-  const connectedServers = servers.filter(s => s.status === 'connected').length;
-  const disconnectedServers = servers.filter(s => s.status === 'disconnected').length;
-  const errorServers = servers.filter(s => s.status === 'error').length;
+  const readyServers = servers.filter(s => s.ready).length;
+  const notReadyServers = servers.filter(s => !s.ready).length;
   const totalTools = tools.length;
 
   if (serversLoading) {
@@ -209,40 +194,25 @@ const MCPOverview: React.FC = () => {
           <GridItem>
             <Card>
               <CardTitle>
-                <CheckCircleIcon className="mcp-overview__icon--success" /> {t('Connected')}
+                <CheckCircleIcon className="mcp-overview__icon--success" /> {t('Ready')}
               </CardTitle>
               <CardBody>
                 <div className="mcp-overview__metric mcp-overview__metric--success">
-                  {connectedServers}
+                  {readyServers}
                 </div>
               </CardBody>
             </Card>
           </GridItem>
 
-          {disconnectedServers > 0 && (
+          {notReadyServers > 0 && (
             <GridItem>
               <Card>
                 <CardTitle>
-                  <ExclamationTriangleIcon className="mcp-overview__icon--warning" /> {t('Disconnected')}
-                </CardTitle>
-                <CardBody>
-                  <div className="mcp-overview__metric mcp-overview__metric--warning">
-                    {disconnectedServers}
-                  </div>
-                </CardBody>
-              </Card>
-            </GridItem>
-          )}
-
-          {errorServers > 0 && (
-            <GridItem>
-              <Card>
-                <CardTitle>
-                  <ExclamationCircleIcon className="mcp-overview__icon--danger" /> {t('Error')}
+                  <ExclamationCircleIcon className="mcp-overview__icon--danger" /> {t('Not Ready')}
                 </CardTitle>
                 <CardBody>
                   <div className="mcp-overview__metric mcp-overview__metric--danger">
-                    {errorServers}
+                    {notReadyServers}
                   </div>
                 </CardBody>
               </Card>

@@ -58,15 +58,18 @@ export function useMCPTools(
 
       // enrich tools with server information
       const enrichedTools: EnrichedTool[] = result.tools.map((tool: Tool) => {
-        // find which server this tool belongs to based on prefix
-        const server = servers.find((s) =>
-          tool.name.startsWith(s.toolPrefix),
-        );
+        // extract prefix from server ID format: "name:prefix:hostname"
+        const server = servers.find((s) => {
+          const prefix = s.id.split(':')[1];
+          return tool.name.startsWith(prefix);
+        });
+
+        const serverPrefix = server ? server.id.split(':')[1] : '';
 
         return {
           ...tool,
           serverName: server?.name || 'unknown',
-          serverPrefix: server?.toolPrefix || '',
+          serverPrefix,
           fullName: tool.name,
         };
       });

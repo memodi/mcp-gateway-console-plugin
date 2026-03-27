@@ -39,15 +39,8 @@ export function useMCPServers(
       setError(null);
       const status = await getBrokerStatus();
 
-      // transform response into enriched server array
-      const enrichedServers: EnrichedServer[] = Object.entries(
-        status.servers,
-      ).map(([name, info]) => ({
-        name,
-        ...info,
-      }));
-
-      setServers(enrichedServers);
+      // servers are already in array format from the API
+      setServers(status.servers);
     } catch (err) {
       const errorMessage =
         err instanceof APIError
