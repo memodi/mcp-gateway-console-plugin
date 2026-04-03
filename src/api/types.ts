@@ -79,6 +79,26 @@ export interface ContentItem {
   mimeType?: string;
 }
 
+// virtual server types
+export interface MCPVirtualServer {
+  apiVersion: 'mcp.kuadrant.io/v1alpha1';
+  kind: 'MCPVirtualServer';
+  metadata: {
+    name: string;
+    namespace: string;
+  };
+  spec: {
+    description?: string;
+    tools: string[];
+  };
+}
+
+export interface MCPVirtualServerList {
+  apiVersion: 'mcp.kuadrant.io/v1alpha1';
+  kind: 'MCPVirtualServerList';
+  items: MCPVirtualServer[];
+}
+
 // enriched types for ui display
 export interface EnrichedServer extends ServerValidationStatus {
   tools?: Tool[];
@@ -88,6 +108,7 @@ export interface EnrichedTool extends Tool {
   serverName: string;
   serverPrefix: string;
   fullName: string; // with prefix
+  virtualServers?: string[]; // list of virtual server names that include this tool
 }
 
 // api error type

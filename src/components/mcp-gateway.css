@@ -1,0 +1,55 @@
+/* MCP Gateway Console Plugin Styles */
+
+/* Overview Page Metrics */
+.mcp-overview__metrics {
+  margin-bottom: 24px;
+}
+
+.mcp-overview__metric-card {
+  padding: 16px;
+}
+
+.mcp-overview__metric-title {
+  font-size: 14px;
+  color: var(--pf-v5-global--Color--200);
+  margin-bottom: 8px;
+}
+
+.mcp-overview__metric-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--pf-v5-global--Color--100);
+}
+
+/* Table Card */
+.mcp-overview__table-card {
+  margin-top: 24px;
+  padding: 16px;
+}
+
+.mcp-overview__table-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Server Name Link */
+.mcp-server-link {
+  color: var(--pf-v5-global--link--Color);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.mcp-server-link:hover {
+  color: var(--pf-v5-global--link--Color--hover);
+  text-decoration: underline;
+}
+
+/* Tools Page */
+.mcp-tools__toolbar {
+  margin-bottom: 16px;
+}
+
+.mcp-tools__filter-chips {
+  margin-top: 8px;
+}

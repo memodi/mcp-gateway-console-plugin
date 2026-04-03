@@ -1,43 +1,35 @@
 // mcp gateway overview dashboard
 
-import React from 'react';
 import { DocumentTitle, ListPageHeader } from '@openshift-console/dynamic-plugin-sdk';
-import { useTranslation } from 'react-i18next';
 import {
-  PageSection,
+  Alert,
+  Button,
   Card,
   CardBody,
   CardTitle,
-  Grid,
-  GridItem,
-  Spinner,
-  Alert,
   EmptyState,
   EmptyStateBody,
-  Button,
+  Grid,
+  GridItem,
   Label,
+  PageSection,
+  Spinner,
   Tooltip,
 } from '@patternfly/react-core';
 import {
-  ServerIcon,
-  WrenchIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
-  ExclamationTriangleIcon,
-  InProgressIcon,
+  ServerIcon,
+  WrenchIcon,
 } from '@patternfly/react-icons';
-import {
-  Table,
-  Thead,
-  Tr,
-  Th,
-  Tbody,
-  Td,
-} from '@patternfly/react-table';
-import { useMCPServers, useMCPTools } from '../hooks';
-import { EnrichedServer } from '../api/types';
+import { Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { setAPIConfig } from '../api/client';
-
+import { EnrichedServer } from '../api/types';
+import { useMCPServers, useMCPTools } from '../hooks';
+import './mcp-gateway.css';
 
 // configure api to use mock broker for development
 if (window.location.hostname === 'localhost') {
@@ -74,7 +66,12 @@ const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers })
           return (
             <Tr key={server.id}>
               <Td dataLabel={t('Server Name')}>
-                <strong>{server.name}</strong>
+                <Link
+                  to={`/mcp-gateway/tools?server=${encodeURIComponent(server.name)}`}
+                  className="mcp-server-link"
+                >
+                  {server.name}
+                </Link>
               </Td>
               <Td dataLabel={t('Status')}>
                 {!server.ready ? (
@@ -89,12 +86,8 @@ const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers })
                   </Label>
                 )}
               </Td>
-              <Td dataLabel={t('Tool Count')}>
-                {server.totalTools}
-              </Td>
-              <Td dataLabel={t('Last Validated')}>
-                {lastValidated}
-              </Td>
+              <Td dataLabel={t('Tool Count')}>{server.totalTools}</Td>
+              <Td dataLabel={t('Last Validated')}>{lastValidated}</Td>
               <Td dataLabel={t('ID')}>
                 <code className="mcp-overview__url">{server.id}</code>
               </Td>
@@ -109,11 +102,16 @@ const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers })
 // main overview component
 const MCPOverview: React.FC = () => {
   const { t } = useTranslation('plugin__console-plugin-template');
-  const { servers, loading: serversLoading, error: serversError, refresh } = useMCPServers();
-  const { tools, loading: toolsLoading } = useMCPTools();
+  const {
+    servers,
+    loading: serversLoading,
+    error: serversError,
+    refresh,
+  } = useMCPServers(true, 30000);
+  const { tools, loading: toolsLoading } = useMCPTools(true, 30000);
 
-  const readyServers = servers.filter(s => s.ready).length;
-  const notReadyServers = servers.filter(s => !s.ready).length;
+  const readyServers = servers.filter((s) => s.ready).length;
+  const notReadyServers = servers.filter((s) => !s.ready).length;
   const totalTools = tools.length;
 
   if (serversLoading) {
@@ -177,55 +175,47 @@ const MCPOverview: React.FC = () => {
       <ListPageHeader title={t('MCP Gateway Overview')} />
 
       <PageSection>
-        <Grid hasGutter span={12} md={6} lg={3}>
+        <Grid hasGutter span={12} md={6} lg={3} className="mcp-overview__metrics">
           <GridItem>
-            <Card>
-              <CardTitle>
+            <Card className="mcp-overview__metric-card">
+              <CardTitle className="mcp-overview__metric-title">
                 <ServerIcon /> {t('Total Servers')}
               </CardTitle>
               <CardBody>
-                <div className="mcp-overview__metric">
-                  {servers.length}
-                </div>
+                <div className="mcp-overview__metric-value">{servers.length}</div>
               </CardBody>
             </Card>
           </GridItem>
 
           <GridItem>
-            <Card>
-              <CardTitle>
-                <CheckCircleIcon className="mcp-overview__icon--success" /> {t('Ready')}
+            <Card className="mcp-overview__metric-card">
+              <CardTitle className="mcp-overview__metric-title">
+                <CheckCircleIcon /> {t('Ready')}
               </CardTitle>
               <CardBody>
-                <div className="mcp-overview__metric mcp-overview__metric--success">
-                  {readyServers}
-                </div>
+                <div className="mcp-overview__metric-value">{readyServers}</div>
               </CardBody>
             </Card>
           </GridItem>
 
-          {notReadyServers > 0 && (
-            <GridItem>
-              <Card>
-                <CardTitle>
-                  <ExclamationCircleIcon className="mcp-overview__icon--danger" /> {t('Not Ready')}
-                </CardTitle>
-                <CardBody>
-                  <div className="mcp-overview__metric mcp-overview__metric--danger">
-                    {notReadyServers}
-                  </div>
-                </CardBody>
-              </Card>
-            </GridItem>
-          )}
+          <GridItem>
+            <Card className="mcp-overview__metric-card">
+              <CardTitle className="mcp-overview__metric-title">
+                <ExclamationCircleIcon /> {t('Not Ready')}
+              </CardTitle>
+              <CardBody>
+                <div className="mcp-overview__metric-value">{notReadyServers}</div>
+              </CardBody>
+            </Card>
+          </GridItem>
 
           <GridItem>
-            <Card>
-              <CardTitle>
+            <Card className="mcp-overview__metric-card">
+              <CardTitle className="mcp-overview__metric-title">
                 <WrenchIcon /> {t('Available Tools')}
               </CardTitle>
               <CardBody>
-                <div className="mcp-overview__metric">
+                <div className="mcp-overview__metric-value">
                   {toolsLoading ? <Spinner size="md" /> : totalTools}
                 </div>
               </CardBody>

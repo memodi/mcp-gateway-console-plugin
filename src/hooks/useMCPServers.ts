@@ -42,10 +42,7 @@ export function useMCPServers(
       // servers are already in array format from the API
       setServers(status.servers);
     } catch (err) {
-      const errorMessage =
-        err instanceof APIError
-          ? err.message
-          : 'Failed to fetch servers';
+      const errorMessage = err instanceof APIError ? err.message : 'Failed to fetch servers';
       setError(errorMessage);
       console.error('Error fetching MCP servers:', err);
     } finally {

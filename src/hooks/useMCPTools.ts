@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { listTools } from '../api/client';
-import { EnrichedTool, Tool, APIError } from '../api/types';
+import { EnrichedTool, Tool, APIError, MCPVirtualServer } from '../api/types';
 import { useMCPServers } from './useMCPServers';
+import { useMCPVirtualServers } from './useMCPVirtualServers';
 
 interface UseMCPToolsResult {
   tools: EnrichedTool[];
@@ -39,6 +40,8 @@ interface UseMCPToolsResult {
  * ```
  */
 export function useMCPTools(
+  autoRefresh = false,
+  refreshInterval = 30000,
   authToken?: string,
 ): UseMCPToolsResult {
   const [tools, setTools] = useState<EnrichedTool[]>([]);
@@ -47,16 +50,30 @@ export function useMCPTools(
 
   // get server info for prefix mapping
   const { servers, loading: serversLoading } = useMCPServers();
+  // get virtual servers for tool-to-virtualserver mapping
+  const { virtualServers, loading: virtualServersLoading } = useMCPVirtualServers(
+    autoRefresh,
+    refreshInterval,
+  );
 
   const fetchTools = useCallback(async () => {
-    // wait for servers to load first
-    if (serversLoading) return;
+    // wait for servers and virtual servers to load first
+    if (serversLoading || virtualServersLoading) return;
 
     try {
       setError(null);
       const result = await listTools(authToken);
 
-      // enrich tools with server information
+      // build tool -> virtual servers mapping
+      const toolToVirtualServers = new Map<string, string[]>();
+      virtualServers.forEach((vs) => {
+        vs.spec.tools.forEach((toolName) => {
+          const existing = toolToVirtualServers.get(toolName) || [];
+          toolToVirtualServers.set(toolName, [...existing, `${vs.metadata.namespace}/${vs.metadata.name}`]);
+        });
+      });
+
+      // enrich tools with server and virtual server information
       const enrichedTools: EnrichedTool[] = result.tools.map((tool: Tool) => {
         // extract prefix from server ID format: "name:prefix:hostname"
         const server = servers.find((s) => {
@@ -71,32 +88,39 @@ export function useMCPTools(
           serverName: server?.name || 'unknown',
           serverPrefix,
           fullName: tool.name,
+          virtualServers: toolToVirtualServers.get(tool.name),
         };
       });
 
       setTools(enrichedTools);
     } catch (err) {
-      const errorMessage =
-        err instanceof APIError
-          ? err.message
-          : 'Failed to fetch tools';
+      const errorMessage = err instanceof APIError ? err.message : 'Failed to fetch tools';
       setError(errorMessage);
       console.error('Error fetching MCP tools:', err);
     } finally {
       setLoading(false);
     }
-  }, [authToken, servers, serversLoading]);
+  }, [authToken, servers, serversLoading, virtualServers, virtualServersLoading]);
 
-  // fetch when servers are ready
+  // fetch when servers and virtual servers are ready
   useEffect(() => {
-    if (!serversLoading) {
+    if (!serversLoading && !virtualServersLoading) {
       fetchTools();
     }
-  }, [fetchTools, serversLoading]);
+  }, [fetchTools, serversLoading, virtualServersLoading]);
+
+  // auto-refresh if enabled
+  useEffect(() => {
+    if (!autoRefresh || serversLoading || virtualServersLoading) return;
+
+    const intervalId = setInterval(fetchTools, refreshInterval);
+
+    return () => clearInterval(intervalId);
+  }, [autoRefresh, refreshInterval, fetchTools, serversLoading, virtualServersLoading]);
 
   return {
     tools,
-    loading: loading || serversLoading,
+    loading: loading || serversLoading || virtualServersLoading,
     error,
     refresh: fetchTools,
   };

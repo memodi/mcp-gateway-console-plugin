@@ -42,10 +42,7 @@ function getCSRFToken(): string | null {
 /**
  * Generic fetch wrapper with error handling
  */
-async function fetchAPI<T>(
-  url: string,
-  options?: RequestInit,
-): Promise<T> {
+async function fetchAPI<T>(url: string, options?: RequestInit): Promise<T> {
   try {
     // add CSRF token for POST requests (required by OpenShift Console proxy)
     const headers = new Headers(options?.headers);
@@ -76,7 +73,36 @@ async function fetchAPI<T>(
       );
     }
 
-    return response.json() as Promise<T>;
+    // check content-type to handle both JSON and SSE responses
+    const contentType = response.headers.get('content-type') || '';
+    const responseText = await response.text();
+
+    // parse SSE format if needed
+    if (contentType.includes('text/event-stream') || responseText.startsWith('event:')) {
+      // SSE can contain multiple events, we want the last "message" event with MCP response
+      // format: "event: message\ndata: {...}\n\n"
+      const events = responseText.split('\n\n').filter((e) => e.trim());
+
+      // process events in reverse to get the most recent message event
+      for (let i = events.length - 1; i >= 0; i--) {
+        const event = events[i];
+        const dataMatch = event.match(/event:\s*message\s*\ndata:\s*(.+)/);
+        if (dataMatch && dataMatch[1]) {
+          try {
+            return JSON.parse(dataMatch[1]) as T;
+          } catch (e) {
+            console.warn('Failed to parse SSE data:', dataMatch[1], e);
+            continue;
+          }
+        }
+      }
+
+      // fallback: try to parse entire response as JSON
+      return JSON.parse(responseText) as T;
+    }
+
+    // standard JSON response
+    return JSON.parse(responseText) as T;
   } catch (error) {
     if (error instanceof APIError) {
       throw error;
@@ -90,11 +116,7 @@ async function fetchAPI<T>(
 /**
  * Make an MCP protocol request
  */
-async function mcpRequest<T>(
-  method: string,
-  params?: unknown,
-  authToken?: string,
-): Promise<T> {
+async function mcpRequest<T>(method: string, params?: unknown, authToken?: string): Promise<T> {
   // auto-initialize if no session
   if (!mcpSessionId) {
     await initializeSession();
@@ -109,6 +131,7 @@ async function mcpRequest<T>(
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
+    Accept: 'application/json',
   };
 
   if (authToken) {
@@ -138,6 +161,8 @@ async function mcpRequest<T>(
   }
 
   if (!response.result) {
+    // log the actual response for debugging
+    console.warn('MCP response missing result field:', JSON.stringify(response));
     throw new APIError('MCP response missing result');
   }
 
@@ -148,18 +173,14 @@ async function mcpRequest<T>(
  * Get broker status (registered servers)
  */
 export async function getBrokerStatus(): Promise<BrokerStatusResponse> {
-  return fetchAPI<BrokerStatusResponse>(
-    `${API_CONFIG.brokerBaseUrl}${API_CONFIG.statusEndpoint}`,
-  );
+  return fetchAPI<BrokerStatusResponse>(`${API_CONFIG.brokerBaseUrl}${API_CONFIG.statusEndpoint}`);
 }
 
 /**
  * List all available tools
  * @param authToken - optional user token for authorization filtering
  */
-export async function listTools(
-  authToken?: string,
-): Promise<ToolsListResult> {
+export async function listTools(authToken?: string): Promise<ToolsListResult> {
   return mcpRequest<ToolsListResult>('tools/list', undefined, authToken);
 }
 
@@ -186,12 +207,10 @@ export async function callTool(
  * Initialize MCP session (handshake)
  * This may be needed depending on broker implementation
  */
-export async function initializeSession(
-  clientInfo?: {
-    name: string;
-    version: string;
-  },
-): Promise<void> {
+export async function initializeSession(clientInfo?: {
+  name: string;
+  version: string;
+}): Promise<void> {
   const request: MCPRequest = {
     jsonrpc: '2.0',
     method: 'initialize',
@@ -209,16 +228,13 @@ export async function initializeSession(
   };
 
   // don't use mcpRequest to avoid circular dependency
-  await fetchAPI<MCPResponse<unknown>>(
-    `${API_CONFIG.brokerBaseUrl}${API_CONFIG.mcpEndpoint}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
+  await fetchAPI<MCPResponse<unknown>>(`${API_CONFIG.brokerBaseUrl}${API_CONFIG.mcpEndpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  );
+    body: JSON.stringify(request),
+  });
   // session ID will be captured by fetchAPI from response headers
 }
 
