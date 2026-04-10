@@ -41,7 +41,7 @@ interface UseMCPToolsResult {
  */
 export function useMCPTools(
   autoRefresh = false,
-  refreshInterval = 30000,
+  refreshInterval = 15000,
   authToken?: string,
 ): UseMCPToolsResult {
   const [tools, setTools] = useState<EnrichedTool[]>([]);

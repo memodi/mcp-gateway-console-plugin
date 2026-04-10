@@ -40,11 +40,11 @@ if (window.location.hostname === 'localhost') {
 const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers }) => {
   const { t } = useTranslation('plugin__console-plugin-template');
 
-  const getStatusDisplay = (ready: boolean, message: string) => {
+  const getStatusDisplay = (ready: boolean) => {
     if (ready) {
       return { icon: <CheckCircleIcon />, variant: 'green' as const, label: t('Ready') };
     } else {
-      return { icon: <ExclamationCircleIcon />, variant: 'red' as const, label: message };
+      return { icon: <ExclamationCircleIcon />, variant: 'red' as const, label: t('NotReady') };
     }
   };
 
@@ -61,7 +61,7 @@ const ServerStatusTable: React.FC<{ servers: EnrichedServer[] }> = ({ servers })
       </Thead>
       <Tbody>
         {servers.map((server) => {
-          const statusDisplay = getStatusDisplay(server.ready, server.message);
+          const statusDisplay = getStatusDisplay(server.ready);
           const lastValidated = new Date(server.lastValidated).toLocaleString();
           return (
             <Tr key={server.id}>
@@ -107,8 +107,8 @@ const MCPOverview: React.FC = () => {
     loading: serversLoading,
     error: serversError,
     refresh,
-  } = useMCPServers(true, 30000);
-  const { tools, loading: toolsLoading } = useMCPTools(true, 30000);
+  } = useMCPServers(true, 15000);
+  const { tools, loading: toolsLoading } = useMCPTools(true, 15000);
 
   const readyServers = servers.filter((s) => s.ready).length;
   const notReadyServers = servers.filter((s) => !s.ready).length;

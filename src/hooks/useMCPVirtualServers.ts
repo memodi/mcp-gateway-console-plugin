@@ -20,7 +20,7 @@ interface UseMCPVirtualServersResult {
  * Usage:
  * ```tsx
  * function ToolsList() {
- *   const { virtualServers, loading } = useMCPVirtualServers(true, 30000);
+ *   const { virtualServers, loading } = useMCPVirtualServers(true, 15000);
  *
  *   return <div>Found {virtualServers.length} virtual servers</div>;
  * }
@@ -28,7 +28,7 @@ interface UseMCPVirtualServersResult {
  */
 export function useMCPVirtualServers(
   autoRefresh = false,
-  refreshInterval = 30000,
+  refreshInterval = 15000,
 ): UseMCPVirtualServersResult {
   const [virtualServers, setVirtualServers] = useState<MCPVirtualServer[]>([]);
   const [loading, setLoading] = useState(true);

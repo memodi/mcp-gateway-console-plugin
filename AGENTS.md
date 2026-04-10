@@ -287,3 +287,6 @@ Frontend uses `brokerBaseUrl: ''` in `src/api/client.ts` to make relative reques
 - **Add translations?** Use `t()` function, run `yarn i18n` after
 - **Test changes?** Run locally with `yarn start` + `yarn start-console`, add Cypress tests
 - **Deploy?** Build image, push to registry, install via Helm chart
+
+## Integration with MCP gateway controller
+@/Users/memodi/workspaces/repos/mcp-gateway/Claude.md

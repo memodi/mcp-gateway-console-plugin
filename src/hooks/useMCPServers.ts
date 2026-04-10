@@ -28,7 +28,7 @@ interface UseMCPServersResult {
  */
 export function useMCPServers(
   autoRefresh = false,
-  refreshInterval = 30000, // 30 seconds
+  refreshInterval = 15000, // 15 seconds
 ): UseMCPServersResult {
   const [servers, setServers] = useState<EnrichedServer[]>([]);
   const [loading, setLoading] = useState(true);

@@ -231,7 +231,7 @@ const ToolsTable: React.FC<{
 const MCPToolsList: React.FC = () => {
   const { t } = useTranslation('plugin__console-plugin-template');
   const location = useLocation();
-  const { tools, loading, error, refresh } = useMCPTools(true, 30000);
+  const { tools, loading, error, refresh } = useMCPTools(true, 15000);
   const [searchValue, setSearchValue] = useState('');
   const [selectedServers, setSelectedServers] = useState<string[]>([]);
   const [selectedVirtualServers, setSelectedVirtualServers] = useState<string[]>([]);
